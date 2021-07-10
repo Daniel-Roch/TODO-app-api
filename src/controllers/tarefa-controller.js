@@ -4,7 +4,7 @@ module.exports = app => {
         valores de tarefas devem ser retornados`)
     })
     app.post('/tarefas',(req,res)=>{
-
+        console.log(req.body)
         //Quero mostrar uma mensagem de estar ok
         res.send(`Rota POST de terefas ativada: tarefas adicionado ao banco de dados`)
     })
