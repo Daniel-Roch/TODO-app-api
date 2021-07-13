@@ -1,27 +1,21 @@
 const express = require('express')
 const app = express()
-//não preciso mais do body-parser.. bodyParser.json()
+//não preciso mais do body-parser.. bodyParser.json() // middleware
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
-//Se quiser pode comentar esta parte, é para validar os dados que vão entrar!
-//Esta parte ele Valida que somente se a pessoa colocar {"nome" : "Daniel"} irá ser válido
-/* app.use((req,res,next)=>{
-  if(req.body.nome == 'Daniel'){
-    console.log('Usuário válido')
-    next()
-  }else{
-    console.log('Dados Inválidos!')
-    res.send('Dados Inválidos')
-  }
-}) */
-
-//Chamando a rota com meu usuario e tarefa..
+//Chamando a rota: usuario e tarefa.
 const rotaUsuario = require('./controllers/usuario-controller')
-rotaUsuario(app)
-
 const rotaTarefa = require('./controllers/tarefa-controller')
-rotaTarefa(app)
+
+//Import Models-User e Tasks(tarefas)
+const User = require('./models/UserModels')
+const Tasks = require('./models/TasksModels')
+
+//banco temporario - joguei ele lá na usuario-controller e tarefa-controller
+const db = require('./infra/bd')
+rotaUsuario(app,db,User)
+rotaTarefa(app,db,Tasks)
 
 //Abrindo o servidor com a port = 3000
 const port = 3020
