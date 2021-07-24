@@ -1,63 +1,63 @@
-module.exports = (app,db,User) =>{
-    app.get('/usuario', (req, res) => {
-        let objTotal = db.users
-        if(db.users.length > 0){
-            res.json({objTotal,"count" : objTotal.length})
-        }else{
-            res.json({'users' : 0})
+const UserDao = require('../DAO/UserDao')
+const User = require('../models/UserModels')
+
+//peguei o cors - liberr para acesso ser consumido.
+const cors = require('cors')
+
+/* //ativando o cors sem parametros para todos usarem:
+app.use(cors()) */
+
+module.exports = (app,db) =>{
+    //passei para o userBanco o db ^
+    let userBanco = new UserDao(db)
+//---------------------------------------------
+    //Mostrar usuarios.
+    app.get('/usuario',cors(),async (req, res) => {
+        await userBanco.getAllUser()
+        .then((linhas)=>{
+            res.json({linhas,"count":linhas.length})
+        }).catch(err =>{
+            res.status(400).json({err})
+        })
+    })
+//------------------------------------------
+    //adiciona
+    app.post('/usuario',async (req,res)=>{
+        const {nome,email,senha} = req.body
+        //Passei para um Try Catch para saber se tem algum erro e vou tratar
+        try{
+            const newUser = new User(nome,email,senha)
+            await userBanco.setUser(newUser)
+                .then(ok=>{res.status(201).json({'Dados enviados': ok})})
+                .catch(err =>{res.status(400).json({err})
+            })
+        }catch(erro){
+            res.status(400).json(erro.message)
         }
     })
-    //adiciona
-    app.post('/usuario',(req,res)=>{
-        let count = db.users.length + 1
-        const {nome,email,senha} = req.body
-        db.users.push(new User(nome,email,senha))
-        res.status(201).json({'criacao':true, 'qtd': count})
-    })
-    
+//------------------------------------------------ 
     //Procurando
     app.get('/usuario/:email',(req,res)=>{
-        let filter = db.users.filter(users => req.params.email == users.email)
-        if(filter.length){
-            res.json({email : true, filter})
-        }else{
-            res.json({email : false})
-        }
+        userBanco.getUserEmail(req.params.email)
+            .then(row => res.status(200).json(row))
+            .catch(err => res.status(400).json(err))
     })
     //Deletando - ele cria um novo array e substituir o existente
     app.delete('/usuario/:email',(req,res)=>{
-        db.users = db.users.filter(users => req.params.email != users.email)
-        res.json({'delete': true})
+        userBanco.setUserDelete(req.params.email)
+            .then(resul => res.status(200).json(resul))
+            .catch(erro => res.status(500).json(erro))
     })
+    //alterar - Tudo!
+    app.put('/usuario/:email',async (req,res)=>{
+    try{
+        const {nome, email,senha } = req.body
+        const envUser = new User(nome,email,senha)
 
-    //alterar
-    app.put('/usuario/:email',(req,res)=>{
-        //Vou verificar se o email existe!
-        let filter = db.users.filter(users => req.params.email == users.email)
-        if(filter.length){
-            db.users = db.users.map(users =>{
-                if(req.params.email == users.email){
-                    if(req.body.email){
-                        res.json({'Alteração' : true})
-                        users.email = req.body.email
-                        return users
-                    }else if(req.body.nome){
-                        res.json({'Alteração' : true})
-                        users.nome = req.body.nome
-                        return users
-                    }else if(req.body.senha){
-                        res.json({'Alteração' : true})
-                        users.senha = req.body.senha
-                        return users
-                    }
-                    res.json({'Alteração' : false})
-                    return users
-                }else{
-                    return users
-                }
-            })
-        }else{
-            res.json({email : false})
-        }
+        const resul = await userBanco.setUserPut(envUser,req.params.email)
+        res.status(200).json(resul)
+    }catch(erro){
+        res.status(400).json(erro.message)
+    }
     })
 }
