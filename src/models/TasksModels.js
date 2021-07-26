@@ -1,9 +1,11 @@
+const moment = require('moment')
+
 class Tarefas{
-    constructor(titulo,descricao,status){
+    constructor(titulo,descricao,status,DATACRIACAO,){
         this.titulo = titulo;
         this.descricao = descricao;
         this.status = status;
-        this.dataCriacao = new Date();
+        this.dataCriacao = moment().format('DD/MM/YYYY');
     }
 }
 
